@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BugRoom
 
-## Getting Started
+BugRoom is a real-time AI incident room for your screen. Upload a screenshot or run the built-in demo, and a Gemma 4 31B swarm on Cerebras diagnoses the issue, shows visible agent collaboration, measures speed, and exports an incident report.
 
-First, run the development server:
+## Why Cerebras + Gemma 4
+
+The product only feels good if multiple agents can respond quickly. BugRoom uses `gemma-4-31b` on Cerebras as the primary runtime model and displays latency/tokens-per-second in the UI.
+
+## Local setup
 
 ```bash
+npm install
+cp .env.example .env.local
+# Add CEREBRAS_API_KEY to .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `GET /api/analyze` health check
+- `POST /api/analyze` with JSON:
 
-## Learn More
+```json
+{
+  "prompt": "What is wrong with this screen?",
+  "imageDataUri": "data:image/png;base64,..."
+}
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Submission positioning
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Track 1: Multi-agent + multimodal
+- Track 2: Visual 60-second demo for X/Twitter
+- Track 3: Enterprise incident response/support workflow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Development can be assisted by AI coding tools. Runtime inference is powered primarily by Gemma 4 31B on Cerebras.
