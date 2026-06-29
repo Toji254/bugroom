@@ -1,8 +1,6 @@
-import { callCerebrasAnalysis } from '@/lib/cerebras';
-import { getCerebrasConfig } from '@/lib/env';
+import { runSynchronousAnalysis } from '@/lib/swarm-orchestrator';
 import { isProbablyTooLargeDataUri, isSupportedImageDataUri } from '@/lib/image';
-import { buildIncidentReport } from '@/lib/report';
-import type { AnalysisRequest, AnalysisResult } from '@/lib/types';
+import type { AnalysisRequest } from '@/lib/types';
 
 export async function GET() {
   return Response.json({
@@ -23,7 +21,7 @@ export async function POST(request: Request) {
     if (body.imageDataUri) {
       if (!isSupportedImageDataUri(body.imageDataUri)) {
         return Response.json(
-          { error: 'imageDataUri must be a base64 PNG, JPEG, or WebP data URI. Hosted image URLs are not supported by this hackathon API.' },
+          { error: 'imageDataUri must be a base64 PNG, JPEG, or WebP data URI. Hosted image URLs are not supported by this API.' },
           { status: 400 },
         );
       }
@@ -35,17 +33,10 @@ export async function POST(request: Request) {
       }
     }
 
-    const config = getCerebrasConfig();
-    const analysis = await callCerebrasAnalysis({
-      ...config,
+    const result = await runSynchronousAnalysis({
       prompt: body.prompt.trim(),
       imageDataUri: body.imageDataUri,
     });
-
-    const result: AnalysisResult = {
-      ...analysis,
-      reportMarkdown: buildIncidentReport(analysis),
-    };
 
     return Response.json(result);
   } catch (error) {
