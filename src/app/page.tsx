@@ -31,6 +31,7 @@ import DemoPresetCard from '@/components/DemoPresetCard';
 import SwarmTimeline from '@/components/SwarmTimeline';
 import PlaybookPanel from '@/components/PlaybookPanel';
 import ConsensusPanel from '@/components/ConsensusPanel';
+import AnalysisReportView from '@/components/AnalysisReportView';
 import WatcherIntakePanel from '@/components/WatcherIntakePanel';
 import AsciiMoonCanvas from '@/components/AsciiMoonCanvas';
 import SwarmVisualizer from '@/components/SwarmVisualizer';
@@ -214,6 +215,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [incident, setIncident] = useState<Incident | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'console' | 'report'>('console');
   const [flashTrigger, setFlashTrigger] = useState(0);
   const [flashOrigin, setFlashOrigin] = useState({ x: 0.5, y: 0.5 });
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
@@ -686,6 +688,7 @@ export default function Home() {
       }
 
       setIncident(data.incident);
+      setActiveTab('console');
       attachIncidentStream(data.incident.id);
     } catch (err) {
       setIsAnalyzing(false);
@@ -709,6 +712,9 @@ export default function Home() {
       }
       if (nextIncident.status === 'completed' || nextIncident.status === 'failed') {
         setIsAnalyzing(false);
+        if (nextIncident.status === 'completed') {
+          setActiveTab('report');
+        }
         source.close();
         if (eventSourceRef.current === source) {
           eventSourceRef.current = null;
@@ -1366,8 +1372,43 @@ export default function Home() {
           )}
         </div>
 
-        {/* Live operational dashboard deck (Watcher intake, presets, telemetry logs) */}
-        <div className="w-full max-w-[1200px] grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)] 2xl:grid-cols-[380px_minmax(0,1fr)]">
+        {result && (
+          <div className="w-full max-w-[1200px] mb-6 flex border-b border-white/10">
+            <button
+              type="button"
+              onClick={() => setActiveTab('console')}
+              className={`pb-3 px-6 font-mono-technical text-xs uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
+                activeTab === 'console'
+                  ? 'border-[#1EF7C1] text-[#1EF7C1]'
+                  : 'border-transparent text-white/40 hover:text-white/70'
+              }`}
+            >
+              Operator Console
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('report')}
+              className={`pb-3 px-6 font-mono-technical text-xs uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
+                activeTab === 'report'
+                  ? 'border-[#1EF7C1] text-[#1EF7C1] font-bold'
+                  : 'border-transparent text-white/40 hover:text-white/70'
+              }`}
+            >
+              Analysis Report
+            </button>
+          </div>
+        )}
+
+        {result && activeTab === 'report' ? (
+          <div className="w-full max-w-[1200px] min-h-[60vh] animate-fade-in">
+            <AnalysisReportView
+              result={result}
+              question={prompt}
+              onClose={() => setActiveTab('console')}
+            />
+          </div>
+        ) : (
+          <div className="w-full max-w-[1200px] grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)] 2xl:grid-cols-[380px_minmax(0,1fr)]">
           <aside className="flex flex-col gap-5">
             <WatcherIntakePanel
               capture={pendingCapture}
@@ -1527,7 +1568,7 @@ export default function Home() {
               incident={incident}
               result={result}
               error={error}
-              onOpenReport={() => setShowModal(true)}
+              onOpenReport={() => setActiveTab('report')}
             />
 
             <SwarmTimeline incident={incident} />
@@ -1546,6 +1587,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        )}
       </section>
 
       {/* Section 5: Archives - Spacing reduced from 200vh to 110vh to fix useless space */}

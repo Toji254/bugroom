@@ -48,46 +48,65 @@ export default function ConsensusPanel({ incident, result, error, onOpenReport }
     );
   }
 
+  // Parse out massive subagent plan from the dashboard preview
+  const parseSuggestedFix = (text: string) => {
+    const splitIndex = text.indexOf("Subagent addendum:");
+    if (splitIndex !== -1) {
+      return text.substring(0, splitIndex).trim();
+    }
+    return text;
+  };
+
+  const displayFix = parseSuggestedFix(result.suggestedFix);
+
   return (
-    <section className="room-panel rounded-[24px] p-5 text-left">
-      <div className="flex items-start justify-between gap-4">
+    <section className="room-panel rounded-[24px] p-5 text-left animate-fade-in">
+      <div className="flex items-start justify-between gap-4 border-b border-white/5 pb-3">
         <div>
-          <h2 className="font-mono-technical text-base text-white leading-normal py-0.5">Consensus package</h2>
-          <p className="mt-1 text-[10px] font-mono-console text-white/50">Fix Captain has locked the room response.</p>
+          <h2 className="font-sans text-sm font-semibold text-white leading-normal">Consensus package</h2>
+          <p className="mt-0.5 font-mono-console text-[10px] text-white/40">Fix Captain has locked the room response.</p>
         </div>
         <button
           type="button"
           onClick={onOpenReport}
-          className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 font-mono-console text-[9px] uppercase tracking-wider text-cyan-300 hover:bg-cyan-500/15"
+          className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 font-mono-console text-[10px] uppercase tracking-wider text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
         >
-          Open report
+          View Full Report
         </button>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-4">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+        <div className="space-y-3.5">
           <Panel label="Summary" value={result.summary} />
           <Panel label="Root cause" value={result.rootCause} accent="orange" />
           <div className="room-subpanel rounded-2xl p-4 border border-cyan-500/15">
-            <p className="font-mono-technical text-[10px] uppercase tracking-wider text-cyan-300/80">Suggested fix</p>
-            <pre className="mt-2 whitespace-pre-wrap text-[11px] leading-6 text-cyan-100/90 font-mono-console">{result.suggestedFix}</pre>
+            <p className="font-mono-technical text-[9px] uppercase tracking-wider text-cyan-300/80">Suggested fix</p>
+            <p className="mt-1.5 font-sans text-xs text-cyan-100/90 leading-relaxed font-light">{displayFix}</p>
           </div>
         </div>
 
-        <div className="room-subpanel rounded-2xl p-4">
-          <p className="font-mono-technical text-[10px] uppercase tracking-wider text-white/70">Next steps</p>
-          <ol className="mt-3 space-y-2">
-            {result.nextSteps.map((step, index) => (
-              <li key={`${index}-${step}`} className="flex gap-3 text-[11px] leading-6 text-white/75 font-mono-console">
-                <span className="text-cyan-300">{String(index + 1).padStart(2, '0')}</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="room-subpanel rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <p className="font-mono-technical text-[9px] uppercase tracking-wider text-white/40 border-b border-white/5 pb-1.5">Next steps</p>
+            <ol className="mt-2.5 space-y-2">
+              {result.nextSteps.slice(0, 3).map((step, index) => (
+                <li key={`${index}-${step}`} className="flex gap-2.5 text-xs leading-relaxed text-white/85 font-sans font-light">
+                  <span className="text-cyan-300 font-mono-console font-bold text-[10px] pt-0.5">{String(index + 1).padStart(2, '0')}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+              {result.nextSteps.length > 3 && (
+                <li className="text-[10px] text-white/40 font-mono-console italic pl-6 mt-1">
+                  +{result.nextSteps.length - 3} more steps in report
+                </li>
+              )}
+            </ol>
+          </div>
+          
+          <div className="mt-4 pt-3 border-t border-white/5 grid grid-cols-2 gap-2">
             <Metric label="Confidence" value={`${Math.round(result.confidence * 100)}%`} />
             <Metric label="Latency" value={`${result.timing.elapsedMs}ms`} />
-            <Metric label="Model" value={result.timing.model} />
+            <Metric label="Model" value={result.timing.model.split('/').pop() || '—'} />
             <Metric label="Tokens" value={result.timing.totalTokens ? String(result.timing.totalTokens) : '—'} />
           </div>
         </div>
@@ -98,18 +117,18 @@ export default function ConsensusPanel({ incident, result, error, onOpenReport }
 
 function Panel({ label, value, accent = 'cyan' }: { label: string; value: string; accent?: 'cyan' | 'orange' }) {
   return (
-    <div className={`rounded-2xl border p-4 ${accent === 'orange' ? 'border-orange-500/15 bg-orange-500/[0.05]' : 'room-subpanel'}`}>
-      <p className={`font-mono-technical text-[10px] uppercase tracking-wider ${accent === 'orange' ? 'text-orange-300/80' : 'text-cyan-300/80'}`}>{label}</p>
-      <p className="mt-2 text-[11px] leading-6 text-white/80 font-mono-console">{value}</p>
+    <div className={`rounded-2xl border p-4 ${accent === 'orange' ? 'border-orange-500/15 bg-orange-500/[0.03]' : 'room-subpanel'}`}>
+      <p className={`font-mono-technical text-[9px] uppercase tracking-wider ${accent === 'orange' ? 'text-orange-400/80' : 'text-cyan-300/80'}`}>{label}</p>
+      <p className="mt-1.5 font-sans text-xs text-white/90 leading-relaxed font-light">{value}</p>
     </div>
   );
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="room-subpanel-soft rounded-xl p-3">
-      <p className="font-mono-technical text-[9px] uppercase tracking-wider text-white/50">{label}</p>
-      <p className="mt-1 text-[11px] text-white/85 font-mono-console break-words">{value}</p>
+    <div className="room-subpanel-soft rounded-xl p-2.5">
+      <p className="font-mono-technical text-[8px] uppercase tracking-wider text-white/40">{label}</p>
+      <p className="mt-0.5 text-xs text-white/80 font-mono-console break-words truncate" title={value}>{value}</p>
     </div>
   );
 }
